@@ -52,7 +52,7 @@
 	const closeMenu = async () => {
 		isMobileMenuOpen = false;
 		await tick();
-		openMenuButton.focus();
+		openMenuButton.getButton().focus();
 	};
 
 	const moveFocusToBottom = (e: KeyboardEvent) => {
