@@ -1,8 +1,16 @@
 <script lang="ts">
 	import 'modern-normalize/modern-normalize.css';
 	import { Navigation, Header } from '$components';
+	// @ts-ignore
+	import NProgress from 'nprogress';
+	import 'nprogress/nprogress.css';
+	import { hideAll } from 'tippy.js';
+	import { page } from '$app/stores';
 	import '../styles/main.scss';
 	import type { LayoutData } from './$types';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
+
+	NProgress.configure({ showSpinner: false });
 
 	let topbar: HTMLElement;
 	let scrollY: number;
@@ -18,9 +26,26 @@
 			headerOpacity = 1;
 		}
 	}
+
+	beforeNavigate(() => {
+		NProgress.start();
+		hideAll();
+	});
+	afterNavigate(() => {
+		NProgress.done();
+	});
 </script>
 
 <svelte:window bind:scrollY />
+
+<svelte:head>
+	<title>Spotify{$page.data.title ? ` - ${$page.data.title}` : ''}</title>
+</svelte:head>
+
+<!-- if we're logged out we don't have a menu at all -->
+{#if user}
+	<a href="#main-content" class="skip-link">Skip to content</a>
+{/if}
 
 <div id="main" style:height="2000px">
 	{#if user}
@@ -29,20 +54,19 @@
 		</nav>
 	{/if}
 	<div id="content">
-		<div id="topbar" bind:this={topbar}>
-			<div
-				class="topbar-bg"
-				style:background-color="var(--header-color)"
-				style:opacity={`${headerOpacity}`}
-			/>
-			<Header />
-		</div>
+		{#if user}
+			<div id="topbar" bind:this={topbar}>
+				<div class="topbar-bg" style:opacity={`${headerOpacity}`} />
+				<Header />
+			</div>
+		{/if}
 		<main id="main-content" class:logged-in={user}>
 			<slot />
 		</main>
 	</div>
 </div>
 
+<!-- style:background-color="var(--header-color)" -->
 <style lang="scss">
 	@use '@unsass/breakpoint';
 
@@ -59,6 +83,7 @@
 			z-index: 100;
 
 			.topbar-bg {
+				background-color: var(--header-color);
 				position: absolute;
 				width: 100%;
 				height: 100%;

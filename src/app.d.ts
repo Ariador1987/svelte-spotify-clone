@@ -7,6 +7,7 @@ declare global {
 		// got SpotifyApi types from @types/spotify-api
 		interface PageData {
 			user: SpotifyApi.CurrentUsersProfileResponse | null;
+			title?: string;
 		}
 		// interface Platform {}
 	}
