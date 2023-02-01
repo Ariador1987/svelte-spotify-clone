@@ -24,7 +24,6 @@ export const load: LayoutServerLoad = async ({ cookies, fetch, url }) => {
 		};
 	}
 	if (profileRes.status === 401 && refreshToken) {
-		console.log(url.pathname);
 		// refresh the token and try again
 		const refreshResponse = await fetch('/api/auth/refresh');
 		if (refreshResponse.ok) {

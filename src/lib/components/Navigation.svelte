@@ -52,7 +52,7 @@
 	const closeMenu = async () => {
 		isMobileMenuOpen = false;
 		await tick();
-		openMenuButton.focus();
+		openMenuButton.getButton().focus();
 	};
 
 	const moveFocusToBottom = (e: KeyboardEvent) => {
@@ -67,7 +67,7 @@
 		if (desktop) return;
 		if (e.key === 'Tab' && !e.shiftKey) {
 			e.preventDefault();
-			closeMenuButton.focus();
+			closeMenuButton.getButton().focus();
 		}
 	};
 
