@@ -67,11 +67,20 @@
 </div>
 
 <style lang="scss">
+	@use '@unsass/breakpoint';
+
 	.content {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		width: 100%;
+
+		// to return the menu in no-js to the left
+		&:global(html.no-js) & {
+			@include breakpoint.down('md') {
+				justify-content: flex-start;
+			}
+		}
 	}
 
 	.profile-button {
@@ -82,6 +91,10 @@
 		@include flexCenter;
 		color: var(--text-color);
 		cursor: pointer;
+
+		:global(html.no-js) & {
+			display: none;
+		}
 
 		:global(.profile-arrow) {
 			margin-left: 3px;
@@ -128,6 +141,23 @@
 					width: 100%;
 					text-align: left;
 					font-size: toRem(14);
+				}
+			}
+		}
+	}
+
+	:global(html.no-js) {
+		#profile-menu {
+			display: block !important;
+		}
+
+		.profile-menu-content {
+			ul {
+				padding: 0;
+				margin: 0;
+
+				li {
+					display: inline-block;
 				}
 			}
 		}

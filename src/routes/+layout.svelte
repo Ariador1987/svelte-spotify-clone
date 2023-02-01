@@ -29,6 +29,7 @@
 
 	beforeNavigate(() => {
 		NProgress.start();
+		// tippy hide all menus
 		hideAll();
 	});
 	afterNavigate(() => {
@@ -42,7 +43,7 @@
 	<title>Spotify{$page.data.title ? ` - ${$page.data.title}` : ''}</title>
 </svelte:head>
 
-<!-- if we're logged out we don't have a menu at all -->
+<!-- if we're logged out we don't have a menu at all and this resolves focus with menu concerned -->
 {#if user}
 	<a href="#main-content" class="skip-link">Skip to content</a>
 {/if}
@@ -73,6 +74,12 @@
 	#main {
 		display: flex;
 
+		:global(html.no-js) & {
+			@include breakpoint.down('md') {
+				display: block;
+			}
+		}
+
 		#topbar {
 			position: fixed;
 			height: var(--header-height);
@@ -81,6 +88,19 @@
 			align-items: center;
 			width: 100%;
 			z-index: 100;
+
+			:global(html.no-js) & {
+				position: sticky;
+				top: 0;
+				background-color: var(--header-color);
+				// to prevent items collapsing on each other
+				height: auto;
+				padding: 10px 20px;
+
+				@include breakpoint.up('md') {
+					position: fixed;
+				}
+			}
 
 			.topbar-bg {
 				background-color: var(--header-color);
@@ -109,6 +129,12 @@
 				}
 				&.logged-in {
 					padding-top: calc(3px + var(--header-height));
+
+					:global(html.no-js) & {
+						@include breakpoint.down('md') {
+							padding-top: 30px;
+						}
+					}
 				}
 			}
 		}

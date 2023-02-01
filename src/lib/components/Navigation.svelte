@@ -25,8 +25,8 @@
 		icon: ComponentType<Icon>;
 	}[] = [
 		{
-			path: '/',
 			label: 'Home',
+			path: '/',
 			icon: Home
 		},
 		{
@@ -213,6 +213,14 @@
 		}
 
 		&-inner {
+			// styling for js disabled
+			:global(html.no-js) & {
+				@include breakpoint.down('md') {
+					display: block;
+					height: auto;
+				}
+			}
+
 			padding: 20px;
 			min-width: var(--sidebar-width);
 			background-color: var(--sidebar-color);
