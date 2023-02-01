@@ -1,6 +1,9 @@
 import type { PageLoad } from './$types';
+import { fetchRefresh } from '$utils';
 
-export const load: PageLoad = async ({ fetch, parent }) => {
+export const load: PageLoad = async ({ fetch: _fetch, parent }) => {
+	// retry pattern
+	const fetch = (path: string) => fetchRefresh(_fetch, path);
 	const { user } = await parent();
 
 	const newReleases = fetch('/api/spotify/browse/new-releases?limit=6');
@@ -9,12 +12,13 @@ export const load: PageLoad = async ({ fetch, parent }) => {
 
 	// for 3 of these get random categories
 	const categoriesRes = await fetch(`/api/spotify/browse/categories`);
-	if (!categoriesRes.ok) return undefined;
-	const categoriesJSON = (await categoriesRes.json()) as SpotifyApi.MultipleCategoriesResponse;
+	const categoriesResJSON: SpotifyApi.MultipleCategoriesResponse | undefined = categoriesRes.ok
+		? await categoriesRes.json()
+		: undefined;
 
-	const randomCategories =
-		categoriesJSON.categories.items.sort(() => 0.5 - Math.random()).slice(0, 3) || [];
-
+	const randomCategories = categoriesResJSON
+		? categoriesResJSON.categories.items.sort(() => 0.5 - Math.random()).slice(0, 3)
+		: [];
 	// fetch playlists for our random categories
 	const randomCategoriesPromises = randomCategories.map((cat) =>
 		fetch(`/api/spotify/browse/categories/${cat.id}/playlists?limit=6`)
@@ -28,11 +32,9 @@ export const load: PageLoad = async ({ fetch, parent }) => {
 			...randomCategoriesPromises
 		]);
 
-	console.log(randomCategoriesResp);
-
 	// instead of throwing error we'll return undefined
 	return {
-		newRelases: newReleasesRes.ok
+		newReleases: newReleasesRes.ok
 			? (newReleasesRes.json() as Promise<SpotifyApi.ListOfNewReleasesResponse>)
 			: undefined,
 		userPlaylists: userPlaylistsRes.ok
@@ -41,7 +43,7 @@ export const load: PageLoad = async ({ fetch, parent }) => {
 		featuredPlaylists: featuredPlaylistsRes.ok
 			? (featuredPlaylistsRes.json() as Promise<SpotifyApi.ListOfFeaturedPlaylistsResponse>)
 			: undefined,
-		homeCategories: randomCategoriesResp,
+		homeCategories: randomCategories,
 		categoriesPlaylists: Promise.all(
 			randomCategoriesResp.map((res) =>
 				res.ok ? (res.json() as Promise<SpotifyApi.CategoryPlaylistsResponse>) : undefined
