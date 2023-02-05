@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$components';
+	import { Button, Card } from '$components';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -51,11 +51,35 @@
 				<h2 class="section-title">{section.title}</h2>
 			</div>
 			<div class="left">
-				<Button element="a" href={section.path} variant="outline">See All</Button>
+				<Button element="a" href={section.path} variant="outline"
+					>See All&nbsp;
+					<span class="visually-hidden">{section.title}</span></Button
+				>
 			</div>
+		</div>
+		<div class="grid-items">
+			{#each section.items as item}
+				<Card {item} />
+			{/each}
 		</div>
 	</section>
 {/each}
 
 <style lang="scss">
+	.content-row {
+		margin-bottom: 40px;
+
+		&-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 20px;
+		}
+	}
+
+	.section-title {
+		font-size: toRem(22px);
+		font-weight: 600;
+		margin: 0;
+	}
 </style>

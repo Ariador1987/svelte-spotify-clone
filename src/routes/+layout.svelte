@@ -48,7 +48,7 @@
 	<a href="#main-content" class="skip-link">Skip to content</a>
 {/if}
 
-<div id="main" style:height="2000px">
+<div id="main">
 	{#if user}
 		<nav class="sidebar">
 			<Navigation desktop={true} />

@@ -60,6 +60,7 @@
 					<li>
 						<LogoutButton />
 					</li>
+					<li>bla</li>
 				</ul>
 			</div>
 		</div>

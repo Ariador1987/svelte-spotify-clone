@@ -5,6 +5,7 @@ interface CustomProps {
 	hideOnPopperBlur: boolean;
 	hideOnEsc: boolean;
 	hideOthersOnOpen: boolean;
+	hideOnSelfClick: boolean;
 }
 
 type FilteredProps = CustomProps & Omit<Props, keyof CustomProps | keyof LifecycleHooks>;
@@ -26,6 +27,31 @@ export const hideOnPopperBlur: Plugin<ExtendedProps> = {
 						instance.hide();
 					}
 				});
+			}
+		};
+	}
+};
+
+export const hideOnSelfClick: Plugin<ExtendedProps> = {
+	name: 'hideOnSelfClick',
+	defaultValue: true,
+	fn(instance) {
+		let clicks = 0;
+		function closeMenu(event: MouseEvent) {
+			if (event.type === 'click') {
+				clicks += 1;
+				if (clicks === 2) {
+					instance.hide();
+					clicks = 0;
+				}
+			}
+		}
+		return {
+			onShow() {
+				document.addEventListener('click', closeMenu);
+			},
+			onHide() {
+				document.removeEventListener('click', closeMenu);
 			}
 		};
 	}
