@@ -120,7 +120,7 @@
 
 			@include breakpoint.up('md') {
 				padding: 0 30px;
-				// we need to subtract the sidebar width
+				// we need to subtract the sidebar width so overlay doesn't overflow
 				width: calc(100% - var(--sidebar-width));
 				// width: 100%;
 			}

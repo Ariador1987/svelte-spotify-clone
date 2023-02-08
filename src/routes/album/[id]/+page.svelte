@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 	import { Album } from 'lucide-svelte';
 	import { getCopyrightSymbol } from '$utils';
-	import { ItemPage } from '$components';
+	import { ItemPage, TrackList } from '$components';
 
 	export let data: PageData;
 
@@ -31,13 +31,15 @@
 			>{album.total_tracks} Track{`${album.total_tracks > 1 ? 's' : ''}`}</span
 		>
 	</p>
-	<div class="tracks">
+
+	<TrackList tracks={album.tracks.items} />
+	<!-- <div class="tracks">
 		<ul>
 			{#each album.tracks.items as track}
 				<li>{track.name}</li>
 			{/each}
 		</ul>
-	</div>
+	</div> -->
 
 	<div class="credits">
 		<p class="date">
