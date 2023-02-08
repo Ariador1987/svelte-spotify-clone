@@ -30,6 +30,7 @@
 					trigger: 'click',
 					placement: 'bottom-end',
 					interactive: true,
+					hideOnClick: true,
 					theme: 'menu',
 					hideOnPopperBlur: true
 				}}
@@ -60,7 +61,6 @@
 					<li>
 						<LogoutButton />
 					</li>
-					<li>bla</li>
 				</ul>
 			</div>
 		</div>
