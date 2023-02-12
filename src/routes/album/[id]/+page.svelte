@@ -13,7 +13,6 @@
 
 	//@ts-ignore
 	$: color = data.color;
-	$: console.log(color);
 </script>
 
 <ItemPage

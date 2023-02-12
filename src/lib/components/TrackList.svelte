@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { msToTime } from '$utils';
 	import { Clock8, ListPlus } from 'lucide-svelte';
+	import { Player } from '$components';
+	import playingGif from '$assets/playing.gif';
+
 	export let tracks: SpotifyApi.TrackObjectFull[] | SpotifyApi.TrackObjectSimplified[];
+	let currentlyPlaying: string | null = null;
+	let isPaused: boolean = false;
 </script>
 
 <div class="tracks">
@@ -19,9 +24,25 @@
 	</div>
 
 	{#each tracks as track, index}
-		<div class="row">
+		<div class="row" class:is-current={currentlyPlaying === track.id}>
 			<div class="number-column">
-				<span class="number">{index + 1}</span>
+				{#if currentlyPlaying === track.id && !isPaused}
+					<img src={playingGif} alt="" class="playing-gif" />
+				{:else}
+					<span class="number">{index + 1}</span>
+				{/if}
+				<div class="player">
+					<Player
+						{track}
+						on:play={(e) => {
+							currentlyPlaying = e.detail.track.id;
+							isPaused = false;
+						}}
+						on:pause={(e) => {
+							isPaused = e.detail.track.id === currentlyPlaying;
+						}}
+					/>
+				</div>
 			</div>
 			<div class="info-column">
 				<div class="track-title">
@@ -50,6 +71,8 @@
 </div>
 
 <style lang="scss">
+	@use '@unsass/breakpoint';
+
 	.tracks {
 		.row {
 			display: flex;
@@ -57,11 +80,34 @@
 			padding: 7px 5px;
 			border-radius: 4px;
 
+			@include breakpoint.down('md') {
+				// :global(.no-js) & {
+				// 	flex-direction: column;
+				// 	background: rgba(255, 255, 255, 0.03);
+				// 	padding: 20px;
+				// 	margin-bottom: 20px;
+				// }
+			}
+
+			&.is-current {
+				.info-column .track-title h4,
+				.number-column,
+				span.number {
+					color: var(--accent-color);
+				}
+			}
+
 			&.header {
 				border-bottom: 1px solid var(--border);
 				border-radius: 0px;
 				padding: 5px;
 				margin-bottom: 15px;
+
+				@include breakpoint.down('md') {
+					// :global(html.no-js) & {
+					// 	display: none;
+					// }
+				}
 
 				.track-title {
 					color: var(--light-gray);
@@ -69,15 +115,31 @@
 					text-transform: uppercase;
 				}
 
-				.duration-column :global(svg) {
-					width: 16px;
-					height: 16px;
-				}
+				// .duration-column :global(svg) {
+				// 	width: 16px;
+				// 	height: 16px;
+				// }
 			}
 
 			&:not(.header) {
 				&:hover {
 					background-color: rgba(255, 255, 255, 0.05);
+
+					.number-column {
+						.player {
+							display: block;
+						}
+						span.number,
+						.playing-gif {
+							display: none;
+						}
+
+						// span.number {
+						// 	:global(.no-js) {
+						// 		display: block;
+						// 	}
+						// }
+					}
 				}
 			}
 
@@ -91,10 +153,41 @@
 					color: var(--light-gray);
 					font-size: toRem(14);
 				}
+
+				.playing-gif {
+					width: 12px;
+				}
+
+				.player {
+					display: none;
+				}
+
+				// :global(html.no-js) {
+				// 	width: 200px;
+				// 	@include flexCenter;
+
+				// 	@include breakpoint.down('md') {
+				// 		width: 100%;
+				// 		margin-right: 0;
+				// 		margin-bottom: 15px;
+				// 	}
+
+				// 	.player {
+				// 		display: block;
+				// 		width: 100%;
+				// 		margin-left: 10px;
+				// 	}
+				// }
 			}
 
 			.info-column {
 				flex: 1;
+
+				@include breakpoint.down('md') {
+					// :global(.no-js) & {
+					// 	width: 100%;
+					// }
+				}
 
 				.track-title {
 					display: flex;
@@ -136,6 +229,13 @@
 				span.duration {
 					color: var(--light-gray);
 					font-size: toRem(14);
+				}
+
+				@include breakpoint.down('md') {
+					// :global(.no-js) & {
+					// 	width: 100%;
+					// 	margin: 10px 0;
+					// }
 				}
 			}
 
