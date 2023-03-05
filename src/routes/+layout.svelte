@@ -1,14 +1,16 @@
 <script lang="ts">
 	import 'modern-normalize/modern-normalize.css';
-	import { Navigation, Header } from '$components';
+	import { Navigation, Header, Toasts } from '$components';
 	// @ts-ignore
 	import NProgress from 'nprogress';
+	import MicroModal from 'micromodal';
 	import 'nprogress/nprogress.css';
 	import { hideAll } from 'tippy.js';
 	import { page } from '$app/stores';
 	import '../styles/main.scss';
 	import type { LayoutData } from './$types';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { browser } from '$app/environment';
 
 	NProgress.configure({ showSpinner: false });
 
@@ -18,6 +20,10 @@
 
 	export let data: LayoutData;
 	$: user = data.user;
+
+	if (browser) {
+		MicroModal.init();
+	}
 
 	$: if (topbar) {
 		if (scrollY / topbar.offsetHeight < 1) {
@@ -48,6 +54,8 @@
 	<a href="#main-content" class="skip-link">Skip to content</a>
 {/if}
 
+<Toasts />
+
 <div id="main">
 	{#if user}
 		<nav class="sidebar">
@@ -76,6 +84,10 @@
 <!-- style:background-color="var(--header-color)" -->
 <style lang="scss">
 	@use '@unsass/breakpoint';
+
+	:global(body) {
+		overflow-x: hidden;
+	}
 
 	#main {
 		display: flex;

@@ -81,12 +81,12 @@
 			border-radius: 4px;
 
 			@include breakpoint.down('md') {
-				// :global(.no-js) & {
-				// 	flex-direction: column;
-				// 	background: rgba(255, 255, 255, 0.03);
-				// 	padding: 20px;
-				// 	margin-bottom: 20px;
-				// }
+				:global(.no-js) & {
+					flex-direction: column;
+					background: rgba(255, 255, 255, 0.03);
+					padding: 20px;
+					margin-bottom: 20px;
+				}
 			}
 
 			&.is-current {
@@ -104,9 +104,9 @@
 				margin-bottom: 15px;
 
 				@include breakpoint.down('md') {
-					// :global(html.no-js) & {
-					// 	display: none;
-					// }
+					:global(html.no-js) & {
+						display: none;
+					}
 				}
 
 				.track-title {
@@ -115,10 +115,10 @@
 					text-transform: uppercase;
 				}
 
-				// .duration-column :global(svg) {
-				// 	width: 16px;
-				// 	height: 16px;
-				// }
+				.duration-column :global(svg) {
+					width: 16px;
+					height: 16px;
+				}
 			}
 
 			&:not(.header) {
@@ -134,11 +134,11 @@
 							display: none;
 						}
 
-						// span.number {
-						// 	:global(.no-js) {
-						// 		display: block;
-						// 	}
-						// }
+						span.number {
+							:global(.no-js) {
+								display: block;
+							}
+						}
 					}
 				}
 			}
@@ -184,9 +184,9 @@
 				flex: 1;
 
 				@include breakpoint.down('md') {
-					// :global(.no-js) & {
-					// 	width: 100%;
-					// }
+					:global(.no-js) & {
+						width: 100%;
+					}
 				}
 
 				.track-title {

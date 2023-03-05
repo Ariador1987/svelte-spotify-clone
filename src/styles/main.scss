@@ -93,6 +93,15 @@ a {
     }
 }
 
+input {
+    border: none;
+    padding: 20px;
+    height: 35px;
+    border-radius: 20px;
+    font-size: toRem(14);
+    color: var(--medium-gray);
+}
+
 .visually-hidden,
 .skip-link:not(:focus) {
     clip: rect(0 0 0 0);
