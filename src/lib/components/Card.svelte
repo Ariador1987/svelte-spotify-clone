@@ -5,6 +5,10 @@
 	type ArtistType = SpotifyApi.ArtistObjectFull;
 
 	export let item: AlbumType | PlaylistType | ArtistType;
+
+	const followersFormat = Intl.NumberFormat('en', {
+		notation: 'compact'
+	});
 </script>
 
 <div class="card {item.type}">
@@ -24,6 +28,11 @@
 	{#if item.type === 'playlist'}
 		<p class="truncate-2">{item.description}</p>
 	{/if}
+	{#if item.type === 'artist'}
+		<p class="truncate-1">
+			{followersFormat.format(item.followers.total)} Followers
+		</p>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -34,6 +43,30 @@
 		border-radius: 4px;
 		transition: background-color 0.3s;
 		position: relative;
+
+		&.artist {
+			text-align: center;
+			padding: 30px 20px;
+
+			img,
+			cover-placeholder {
+				width: 150px;
+				max-width: 100%;
+				border-radius: 100%;
+				box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+			}
+
+			h4 {
+				margin: 0;
+				text-align: center;
+				font-size: toRem(18);
+				margin-bottom: 0.5em;
+			}
+
+			p {
+				margin: 0;
+			}
+		}
 
 		img {
 			width: 100%;

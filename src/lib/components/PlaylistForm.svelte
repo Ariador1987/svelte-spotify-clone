@@ -1,20 +1,43 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { applyAction, enhance } from '$app/forms';
 	import { Button } from '$components';
 	// this is a niche import - beware
 	import type { ActionData as AddActionData } from '../../routes/playlists/new/$types';
 	import type { ActionData as EditActionData } from '../../routes/playlist/[id]/edit/$types';
+	import { createEventDispatcher } from 'svelte';
 
 	export let form: AddActionData | EditActionData;
 	export let userId: string | undefined = undefined;
 	export let action: string | undefined = undefined;
+	// when submitting disable form
+	let isLoading = false;
+	const dispatch = createEventDispatcher<{
+		success: {};
+		redirect: {};
+	}>();
 	export let playlist:
 		| SpotifyApi.PlaylistObjectFull
 		| SpotifyApi.PlaylistObjectSimplified
 		| undefined = undefined;
 </script>
 
-<form method="POST" {action} use:enhance>
+<form
+	method="POST"
+	{action}
+	use:enhance={() => {
+		isLoading = true;
+		return async ({ result }) => {
+			await applyAction(result);
+			isLoading = false;
+			if (result.type === 'success') {
+				dispatch('success');
+			}
+			if (result.type === 'redirect') {
+				dispatch('redirect');
+			}
+		};
+	}}
+>
 	{#if userId}
 		<input type="hidden" id="userId" name="userId" value={userId} />
 	{/if}
@@ -48,7 +71,9 @@
 	{/if}
 
 	<div class="submit-button">
-		<Button element="button" type="submit">{playlist ? 'Save' : 'Create'} Playlist</Button>
+		<Button disabled={isLoading} element="button" type="submit"
+			>{playlist ? 'Save' : 'Create'} Playlist</Button
+		>
 	</div>
 </form>
 

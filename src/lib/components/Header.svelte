@@ -1,18 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { LogoutButton, Navigation } from '$components';
+	import { LogoutButton, Navigation, SearchForm, HeaderNav } from '$components';
 	// to not have two navigations, we solve it by using browser
 	import { browser } from '$app/environment';
 	import { ChevronDown, ExternalLink } from 'lucide-svelte';
 	import { tippy } from '$lib/actions';
 
 	$: user = $page.data.user;
+	export let userAllPlaylists: SpotifyApi.PlaylistObjectSimplified[] | undefined;
 </script>
 
 <div class="content">
 	<div class="left">
 		{#if browser}
-			<Navigation desktop={false} />
+			<Navigation desktop={false} {userAllPlaylists} />
+		{/if}
+
+		<HeaderNav />
+		{#if $page.url.pathname.startsWith('/search')}
+			<div class="search-form">
+				<SearchForm />
+			</div>
 		{/if}
 	</div>
 	<div class="right">
@@ -69,6 +77,13 @@
 
 <style lang="scss">
 	@use '@unsass/breakpoint';
+
+	.search-form {
+		display: none;
+		@include breakpoint.up('lg') {
+			display: block;
+		}
+	}
 
 	.content {
 		display: flex;

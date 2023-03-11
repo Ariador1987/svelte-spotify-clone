@@ -1,12 +1,23 @@
 <script lang="ts">
+	import { Button, Player } from '$components';
 	import { msToTime } from '$utils';
-	import { Clock8, ListPlus } from 'lucide-svelte';
-	import { Player } from '$components';
+	import { Clock8, ListPlus, ListX } from 'lucide-svelte';
 	import playingGif from '$assets/playing.gif';
+	import { tippy } from '$lib/actions';
+	import { page } from '$app/stores';
+	import { enhance } from '$app/forms';
+	import { toasts } from '$stores';
+	import { hideAll } from 'tippy.js';
+	import { invalidate } from '$app/navigation';
 
-	export let tracks: SpotifyApi.TrackObjectFull[] | SpotifyApi.TrackObjectSimplified[];
 	let currentlyPlaying: string | null = null;
 	let isPaused: boolean = false;
+	let isAddingToPlaylists: string[] = [];
+	let isRemovingFromPlaylist: string[] = [];
+
+	export let tracks: SpotifyApi.TrackObjectFull[] | SpotifyApi.TrackObjectSimplified[];
+	export let isOwner: boolean = false;
+	export let userPlaylists: SpotifyApi.PlaylistObjectSimplified[] | undefined;
 </script>
 
 <div class="tracks">
@@ -15,19 +26,18 @@
 			<span class="number">#</span>
 		</div>
 		<div class="info-column">
-			<span class="track-title">A</span>
+			<span class="track-title">Title</span>
 		</div>
 		<div class="duration-column">
-			<Clock8 aria-hidden focusable="true" color="var(--light-gray)" />
+			<Clock8 aria-hidden focusable="false" color="var(--light-gray)" />
 		</div>
-		<div class="actions-column">asdf</div>
+		<div class="actions-column" class:is-owner={isOwner} />
 	</div>
-
 	{#each tracks as track, index}
 		<div class="row" class:is-current={currentlyPlaying === track.id}>
 			<div class="number-column">
 				{#if currentlyPlaying === track.id && !isPaused}
-					<img src={playingGif} alt="" class="playing-gif" />
+					<img class="playing-gif" src={playingGif} alt="" />
 				{:else}
 					<span class="number">{index + 1}</span>
 				{/if}
@@ -48,23 +58,155 @@
 				<div class="track-title">
 					<h4>{track.name}</h4>
 					{#if track.explicit}
-						<span class="explicit">explicit</span>
+						<span class="explicit">Explicit</span>
 					{/if}
 				</div>
 				<p class="artists">
 					{#each track.artists as artist, artistIndex}
-						<a href="/artist/{artist.id}">{artist.name}</a>
-						{#if artistIndex < track.artists.length - 1}
-							{', '}
-						{/if}
+						<a href="/artist/{artist.id}">{artist.name}</a
+						>{#if artistIndex < track.artists.length - 1}{', '}{/if}
 					{/each}
 				</p>
 			</div>
 			<div class="duration-column">
 				<span class="duration">{msToTime(track.duration_ms)}</span>
 			</div>
-			<div class="actions-column">
-				<ListPlus aria-hidden focusable="false" />
+			<div class="actions-column" class:is-owner={isOwner}>
+				{#if isOwner}
+					<form
+						method="POST"
+						action="/playlist/{$page.params.id}?/removeItem"
+						use:enhance={({ cancel }) => {
+							if (isRemovingFromPlaylist.includes(track.id)) {
+								cancel();
+							}
+							isRemovingFromPlaylist = [...isRemovingFromPlaylist, track.id];
+							return ({ result }) => {
+								if (result.type === 'error') {
+									toasts.error(result.error.message);
+								}
+								if (result.type === 'redirect') {
+									const url = new URL(`${$page.url.origin}${result.location}`);
+									const error = url.searchParams.get('error');
+									const success = url.searchParams.get('success');
+									if (error) {
+										toasts.error(error);
+									}
+									if (success) {
+										toasts.success(success);
+										invalidate(`/api/spotify/playlists/${$page.params.id}`);
+									}
+								}
+								isRemovingFromPlaylist = isRemovingFromPlaylist.filter(
+									(t) => t !== track.id
+								);
+							};
+						}}
+					>
+						<input type="hidden" name="track" value={track.id} />
+						<button
+							type="submit"
+							title="Remove {track.name} from the playlist"
+							aria-label="Remove {track.name} from the playlist"
+							class="remove-pl-button"
+							disabled={isRemovingFromPlaylist.includes(track.id)}
+						>
+							<ListX aria-hidden focusable="false" />
+						</button>
+					</form>
+				{:else}
+					<button
+						title="Add {track.name} to a playlist"
+						aria-label="Add {track.name} to a playlist"
+						class="add-pl-button"
+						disabled={!userPlaylists}
+						use:tippy={{
+							content:
+								document.getElementById(`${track.id}-playlists-menu`) || undefined,
+							allowHTML: true,
+							trigger: 'click',
+							interactive: true,
+							theme: 'menu',
+							placement: 'bottom-end',
+							onMount: () => {
+								const template = document.getElementById(
+									`${track.id}-playlists-menu`
+								);
+								if (template) {
+									template.style.display = 'block';
+								}
+							}
+						}}
+					>
+						<ListPlus aria-hidden focusable="false" />
+					</button>
+					{#if userPlaylists}
+						<div
+							class="playlists-menu"
+							id="{track.id}-playlists-menu"
+							style="display: none;"
+						>
+							<div class="playlists-menu-content">
+								<form
+									method="POST"
+									action="/playlist?/addItem&redirect={$page.url.pathname}"
+									use:enhance={({ cancel }) => {
+										if (isAddingToPlaylists.includes(track.id)) {
+											cancel();
+										}
+
+										isAddingToPlaylists = [...isAddingToPlaylists, track.id];
+
+										return ({ result }) => {
+											if (result.type === 'error') {
+												toasts.error(result.error.message);
+											}
+											if (result.type === 'redirect') {
+												const url = new URL(
+													`${$page.url.origin}${result.location}`
+												);
+												const error = url.searchParams.get('error');
+												const success = url.searchParams.get('success');
+												if (error) {
+													toasts.error(error);
+												}
+												if (success) {
+													toasts.success(success);
+													hideAll();
+												}
+											}
+											isAddingToPlaylists = isAddingToPlaylists.filter(
+												(t) => t !== track.id
+											);
+										};
+									}}
+								>
+									<input type="hidden" value={track.id} name="track" />
+									<!-- Adding dropdown -->
+									<div class="field">
+										<select aria-label="Playlist" name="playlist">
+											{#each userPlaylists as playlist}
+												<option value={playlist.id}>{playlist.name}</option>
+											{/each}
+										</select>
+										<div class="submit-button">
+											<Button
+												element="button"
+												type="submit"
+												disabled={isAddingToPlaylists.includes(track.id)}
+											>
+												Add
+												<span class="visually-hidden"
+													>{track.name} to selected playlist</span
+												>
+											</Button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+					{/if}
+				{/if}
 			</div>
 		</div>
 	{/each}
@@ -79,127 +221,106 @@
 			align-items: center;
 			padding: 7px 5px;
 			border-radius: 4px;
-
 			@include breakpoint.down('md') {
 				:global(.no-js) & {
 					flex-direction: column;
-					background: rgba(255, 255, 255, 0.03);
+					background-color: rgba(255, 255, 255, 0.03);
 					padding: 20px;
 					margin-bottom: 20px;
 				}
 			}
-
 			&.is-current {
 				.info-column .track-title h4,
-				.number-column,
-				span.number {
+				.number-column span.number {
 					color: var(--accent-color);
 				}
 			}
-
 			&.header {
 				border-bottom: 1px solid var(--border);
 				border-radius: 0px;
 				padding: 5px;
 				margin-bottom: 15px;
-
 				@include breakpoint.down('md') {
-					:global(html.no-js) & {
+					:global(.no-js) & {
 						display: none;
 					}
 				}
-
 				.track-title {
 					color: var(--light-gray);
 					font-size: toRem(12);
 					text-transform: uppercase;
 				}
-
 				.duration-column :global(svg) {
 					width: 16px;
 					height: 16px;
 				}
 			}
-
 			&:not(.header) {
 				&:hover {
 					background-color: rgba(255, 255, 255, 0.05);
-
 					.number-column {
 						.player {
 							display: block;
 						}
-						span.number,
-						.playing-gif {
-							display: none;
-						}
-
 						span.number {
-							:global(.no-js) {
+							display: none;
+							:global(.no-js) & {
 								display: block;
 							}
+						}
+						.playing-gif {
+							display: none;
 						}
 					}
 				}
 			}
-
 			.number-column {
 				width: 30px;
 				display: flex;
 				justify-content: flex-end;
 				margin-right: 15px;
-
 				span.number {
 					color: var(--light-gray);
 					font-size: toRem(14);
 				}
-
 				.playing-gif {
 					width: 12px;
 				}
-
 				.player {
 					display: none;
 				}
-
-				// :global(html.no-js) {
-				// 	width: 200px;
-				// 	@include flexCenter;
-
-				// 	@include breakpoint.down('md') {
-				// 		width: 100%;
-				// 		margin-right: 0;
-				// 		margin-bottom: 15px;
-				// 	}
-
-				// 	.player {
-				// 		display: block;
-				// 		width: 100%;
-				// 		margin-left: 10px;
-				// 	}
-				// }
+				:global(html.no-js) & {
+					width: 200px;
+					display: flex;
+					align-items: center;
+					@include breakpoint.down('md') {
+						width: 100%;
+						margin-right: 0;
+						margin-bottom: 15px;
+					}
+					.player {
+						display: block;
+						width: 100%;
+						margin-left: 10px;
+					}
+				}
 			}
-
 			.info-column {
 				flex: 1;
-
 				@include breakpoint.down('md') {
 					:global(.no-js) & {
 						width: 100%;
 					}
 				}
-
 				.track-title {
 					display: flex;
 					align-items: center;
-
 					h4 {
 						margin: 0;
 						font-size: toRem(15);
 						font-weight: 400;
 						line-height: 1;
 					}
-
 					span.explicit {
 						text-transform: uppercase;
 						font-size: toRem(8);
@@ -211,37 +332,111 @@
 						color: var(--light-gray);
 					}
 				}
-
 				.artists {
 					color: var(--light-gray);
 					font-size: toRem(13);
 					margin: 7px 0 0;
 					line-height: 1;
-
 					a {
 						color: inherit;
 						text-decoration: none;
 					}
 				}
 			}
-
 			.duration-column {
 				span.duration {
 					color: var(--light-gray);
 					font-size: toRem(14);
 				}
-
 				@include breakpoint.down('md') {
-					// :global(.no-js) & {
-					// 	width: 100%;
-					// 	margin: 10px 0;
-					// }
+					:global(.no-js) & {
+						width: 100%;
+						margin: 10px 0;
+					}
 				}
 			}
-
 			.actions-column {
 				width: 30px;
 				margin-left: 15px;
+
+				&:not(.is-owner) {
+					:global(html.no-js) & {
+						width: 200px;
+						@include breakpoint.down('md') {
+							margin-left: 0;
+							width: 100%;
+						}
+					}
+				}
+
+				.add-pl-button {
+					:global(html.no-js) & {
+						display: none;
+					}
+				}
+
+				.playlists-menu {
+					:global(html.no-js) & {
+						display: block !important;
+					}
+				}
+
+				.add-pl-button,
+				.remove-pl-button {
+					background: none;
+					border: none;
+					padding: 5px;
+					cursor: pointer;
+
+					:global(svg) {
+						stroke: var(--text-color);
+						vertical-align: middle;
+						width: 22px;
+						height: 22px;
+					}
+
+					&.disabled {
+						opacity: 0.8;
+						cursor: not-allowed;
+					}
+				}
+
+				.playlists-menu-content {
+					padding: 15px;
+
+					:global(html.no-js) & {
+						padding: 0;
+					}
+
+					form {
+						:global(html.no-js) & {
+							display: flex;
+							align-items: center;
+						}
+					}
+
+					.field {
+						:global(html.no-js) & {
+							flex: 1;
+						}
+
+						select {
+							width: 100%;
+							height: 35px;
+							border-radius: 4px;
+						}
+					}
+
+					.submit-button {
+						margin-top: 10px;
+						text-align: right;
+
+						:global(html.no-js) & {
+							margin-top: 0px;
+							margin-left: 10px;
+						}
+					}
+				}
 			}
 		}
 	}

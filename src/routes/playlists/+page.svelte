@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { Button, Card, Pagination } from '$components';
+	import { Button, Card, Pagination, PlaylistForm } from '$components';
 	import { toasts } from '$stores';
 	import { Modal } from '$components';
 	import MicroModal from 'micromodal';
 	import type { PageData } from './$types';
+	import type { ActionData } from './new/$types';
 
 	export let data: PageData;
+	export let form: ActionData;
 
 	$: playlists = data.userPlaylists;
 	let isLoading = false;
@@ -21,8 +23,6 @@
 
 		if (res.ok) {
 			const resJSON = await res.json();
-			console.log('HERE');
-			console.log(...resJSON);
 			playlists = {
 				...resJSON,
 				items: [...playlists.items, ...resJSON.items]
@@ -69,7 +69,11 @@
 	{/if}
 </div>
 
-<Modal id="add-playlist-modal" title="Add a new playlist">Some content</Modal>
+<Modal id="add-playlist-modal" title="Add a new playlist">
+	<!-- when invoking actions from different route we have to specify the action even if its a
+	default one -->
+	<PlaylistForm {form} userId={data.user?.id} action="/playlists/new" />
+</Modal>
 
 <style lang="scss">
 	.content {

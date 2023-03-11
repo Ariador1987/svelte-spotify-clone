@@ -1,6 +1,6 @@
 <script lang="ts">
 	import 'modern-normalize/modern-normalize.css';
-	import { Navigation, Header, Toasts } from '$components';
+	import { Navigation, Header, Toasts, SearchForm } from '$components';
 	// @ts-ignore
 	import NProgress from 'nprogress';
 	import MicroModal from 'micromodal';
@@ -11,6 +11,7 @@
 	import type { LayoutData } from './$types';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { X } from 'lucide-svelte';
 
 	NProgress.configure({ showSpinner: false });
 
@@ -20,6 +21,10 @@
 
 	export let data: LayoutData;
 	$: user = data.user;
+	$: userAllPlaylists = data.userAllPlaylists;
+
+	$: hasError = $page.url.searchParams.get('error');
+	$: hasSuccess = $page.url.searchParams.get('success');
 
 	if (browser) {
 		MicroModal.init();
@@ -59,10 +64,20 @@
 <div id="main">
 	{#if user}
 		<nav class="sidebar">
-			<Navigation desktop={true} />
+			<Navigation desktop={true} {userAllPlaylists} />
 		</nav>
 	{/if}
 	<div id="content">
+		{#if hasError || hasSuccess}
+			<div class="message" role="status" class:error={hasError} class:success={hasSuccess}>
+				{hasError ?? hasSuccess}
+				<a href={$page.url.pathname} class="close">
+					<X aria-hidden focusable="false" />
+					<span class="visually-hidden">Close message</span>
+				</a>
+			</div>
+		{/if}
+
 		{#if user}
 			<div id="topbar" bind:this={topbar}>
 				<div
@@ -72,10 +87,15 @@
 						? $page.data.color
 						: 'var(--header-color'}
 				/>
-				<Header />
+				<Header {userAllPlaylists} />
 			</div>
 		{/if}
 		<main id="main-content" class:logged-in={user}>
+			{#if $page.url.pathname.startsWith('/search')}
+				<div class="search-form">
+					<SearchForm />
+				</div>
+			{/if}
 			<slot />
 		</main>
 	</div>
@@ -142,9 +162,11 @@
 			flex: 1;
 			main#main-content {
 				padding: 30px 15px 60px;
+
 				@include breakpoint.up('md') {
 					padding: 30px 30px 60px;
 				}
+
 				&.logged-in {
 					padding-top: calc(3px + var(--header-height));
 
@@ -152,6 +174,48 @@
 						@include breakpoint.down('md') {
 							padding-top: 30px;
 						}
+					}
+				}
+
+				.search-form {
+					margin-bottom: 40px;
+
+					@include breakpoint.up('lg') {
+						display: none;
+					}
+
+					:global(input) {
+						width: 100%;
+					}
+				}
+			}
+
+			.message {
+				position: sticky;
+				z-index: 9999;
+				padding: 10px 20px;
+				top: 0;
+
+				&.error {
+					background-color: var(--error);
+				}
+
+				&.success {
+					background-color: var(--accent-color);
+				}
+
+				.close {
+					position: absolute;
+					right: 10px;
+					top: 5px;
+
+					:global(svg) {
+						stroke: var(--text-color);
+						vertical-align: middle;
+					}
+
+					&.focus {
+						outline-color: #fff;
 					}
 				}
 			}

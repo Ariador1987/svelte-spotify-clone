@@ -5,7 +5,6 @@ import type { PageLoad } from '../$types';
 export const load: PageLoad = async ({ fetch, url }) => {
 	const limit = 18;
 	const page = url.searchParams.get('page');
-	console.log(url.searchParams);
 
 	const searchParams = new URLSearchParams({
 		limit: `${limit}`,

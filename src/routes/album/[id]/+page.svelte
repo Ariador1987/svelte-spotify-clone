@@ -31,7 +31,10 @@
 		>
 	</p>
 
-	<TrackList tracks={album.tracks.items} />
+	<TrackList
+		tracks={album.tracks.items}
+		userPlaylists={data.userAllPlaylists?.filter((pl) => pl.owner.id === data.user?.id)}
+	/>
 	<!-- <div class="tracks">
 		<ul>
 			{#each album.tracks.items as track}
